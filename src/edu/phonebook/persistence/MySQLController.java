@@ -16,10 +16,9 @@ import java.util.Set;
 
 public class MySQLController implements DatabaseController {
 
-    public final String dbUrl;  //"jdbc:mysql://localhost:3306/phonebook";
-    // replace with a user
-    public final String dbUser; // "root";
-    public final String dbPass; // "123456";
+    public final String dbUrl;
+    public final String dbUser;
+    public final String dbPass;
 
     public MySQLController(String dbUrl, String user, String pass) throws IOException {
         this.dbUrl = dbUrl;
