@@ -27,13 +27,9 @@ public class ModifyServlet extends HttpServlet {
             return;
         }
         long accountId = (long) session.getAttribute("accountId");
-        String action = request.getParameter("act");
-        if (action.equals("add")) {
-            RequestDispatcher disp = getServletContext().getRequestDispatcher("/addform.jsp");
-            disp.forward(request, response);
-        } else {
+        ServletContext ctx = getServletContext();
+        if (request.getParameter("contactId") != null) {
             long contactId = Long.parseLong(request.getParameter("contactId"));
-            ServletContext ctx = getServletContext();
             DatabaseController controller = DatabaseService.getControllerFromServletContext(ctx);
             Record rec = null;
             try {
@@ -42,16 +38,25 @@ public class ModifyServlet extends HttpServlet {
                 throw new IOException("Record not found or you don't have the rights to modify it", e);
             }
             request.setAttribute("record", rec);
+        }
 
-            if (action.equals("edit")) {
-                RequestDispatcher disp = ctx.getRequestDispatcher("/editform.jsp");
-                disp.forward(request, response);
-            } else if (action.equals("delete")) {
-                RequestDispatcher disp = ctx.getRequestDispatcher("/deleteform.jsp");
-                disp.forward(request, response);
-            } else {
-                throw new IOException("Operation unknown or not specified");
-            }
+        dispatchRequest(request, response, ctx);
+    }
+
+    private void dispatchRequest(HttpServletRequest request, HttpServletResponse response, ServletContext ctx)
+            throws ServletException, IOException {
+        String action = request.getParameter("act");
+        if (action.equals("add")) {
+            RequestDispatcher disp = getServletContext().getRequestDispatcher("/addform.jsp");
+            disp.forward(request, response);
+        } else if (action.equals("edit")) {
+            RequestDispatcher disp = ctx.getRequestDispatcher("/editform.jsp");
+            disp.forward(request, response);
+        } else if (action.equals("delete")) {
+            RequestDispatcher disp = ctx.getRequestDispatcher("/deleteform.jsp");
+            disp.forward(request, response);
+        } else {
+            throw new IOException("Operation unknown or not specified");
         }
 
     }
