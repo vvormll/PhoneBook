@@ -1,6 +1,8 @@
 package edu.phonebook.persistence;
 import java.io.IOException;
 
+import javax.servlet.ServletContext;
+
 public class DatabaseService {
 
     //enable parametrization?
@@ -12,5 +14,12 @@ public class DatabaseService {
             throw new IOException(e);
         }
         return new MySQLController(dbUrl, user, pass);
+    }
+
+    public static DatabaseController getControllerFromServletContext(ServletContext ctx) throws IOException {
+        String dbUrl = ctx.getInitParameter("DatabaseURL");
+        String dbUser = ctx.getInitParameter("DatabaseUser");
+        String dbPass = ctx.getInitParameter("DatabasePassword");
+        return getController(dbUrl, dbUser, dbPass);
     }
 }
