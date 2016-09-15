@@ -1,6 +1,5 @@
 package edu.phonebook.web;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -18,61 +17,55 @@ public class LoginServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         HttpSession session = request.getSession(false);
-        if (request.getParameter("act") == null) {
-            if (session != null && session.getAttribute("accountId") != null)
-                response.sendRedirect("view");
-            else {
-                RequestDispatcher disp = getServletContext().getRequestDispatcher("/loginform.jsp");
-                try {
-                    disp.forward(request, response);
-                } catch (ServletException e) {
-                    response.getWriter().println(e);
-                    // sendRedirect to an error page
-                }
-            }
+        if (isRequestForLogout(request)) {
+            logoutSession(session);
+            response.sendRedirect("index.html");
+            return;
         }
-        else if (request.getParameter("act").equals("logout")) {
-            if (session != null) {
-                if (session.getAttribute("accountId") != null)
-                    session.removeAttribute("accountId");
-                session.invalidate();
-                response.sendRedirect("index.html");
-            }
+        if (isSessionActive(session)) {
+            response.sendRedirect("view");
+        } else {
+            RequestDispatcher disp = getServletContext().getRequestDispatcher("/loginform.jsp");
+            disp.forward(request, response);
         }
+    }
+
+    private boolean isRequestForLogout(HttpServletRequest request) {
+        String action = request.getParameter("act");
+        return action != null && action.equals("logout");
+    }
+
+    private boolean isSessionActive(HttpSession session) {
+        return session != null && session.getAttribute("accountId") != null;
+    }
+
+    private void logoutSession(HttpSession session) {
+        if (session == null)
+            return;
+        if (session.getAttribute("accountId") != null) {
+            session.removeAttribute("accountId");
+        }
+        session.invalidate();
     }
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        ServletContext ctx = getServletContext();
+        DatabaseController controller = DatabaseService.getControllerFromServletContext(ctx);
+        HttpSession session = initSessionWithAccount(request, controller);
+        response.sendRedirect("view");
+    }
+
+    private HttpSession initSessionWithAccount(HttpServletRequest request, DatabaseController controller)
+            throws IOException {
         String user = request.getParameter("user");
         String pass = request.getParameter("pass");
-        DatabaseController controller = null;
-        long accountId;
-        try {
-            ServletContext ctx = getServletContext();
-            String dbUrl = ctx.getInitParameter("DatabaseURL");
-            String dbUser = ctx.getInitParameter("DatabaseUser");
-            String dbPass = ctx.getInitParameter("DatabasePassword");
-            controller = DatabaseService.getController(dbUrl, dbUser, dbPass);
-        } catch (IOException e) {
-            // redirect to an error page
-            PrintWriter out = response.getWriter();
-            out.println("Couldn't connect to the database");
-            return;
-        }
-        try {
-            accountId = controller.getAccountId(user, pass);
-        } catch (IOException e) {
-            // redirect to an error page
-            PrintWriter out = response.getWriter();
-            out.println(e.getMessage()); 
-            out.println("Account not found");
-            return;
-        }
-        HttpSession session = request.getSession(true);
+        long accountId = controller.getAccountId(user, pass);
+        HttpSession session = request.getSession();
         session.setAttribute("accountId", accountId);
-        response.sendRedirect("view");
+        return session;
     }
 
 }
