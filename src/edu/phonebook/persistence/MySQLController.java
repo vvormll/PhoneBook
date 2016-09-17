@@ -1,5 +1,4 @@
 package edu.phonebook.persistence;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -20,15 +19,13 @@ public class MySQLController implements DatabaseController {
     public final String dbUser;
     public final String dbPass;
 
-    public MySQLController(String dbUrl, String user, String pass) throws IOException {
+    public MySQLController(String dbUrl, String user, String pass) throws SQLException {
         this.dbUrl = dbUrl;
         this.dbUser = user;
         this.dbPass = pass;
         Connection conn = null;
         try {
             conn = DriverManager.getConnection(dbUrl, user, pass);
-        } catch (SQLException e) {
-            throw new IOException(e);
         } finally {
             try {
                 if (conn != null)
@@ -38,7 +35,7 @@ public class MySQLController implements DatabaseController {
     }
 
     @Override
-    public List<Record> getAllRecords(long accountId) throws IOException {
+    public List<Record> getAllRecords(long accountId) throws SQLException {
         List<Record> records = new LinkedList<>();
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -72,8 +69,6 @@ public class MySQLController implements DatabaseController {
             }
             for (Record rec : processed.values())
                 records.add(rec);
-        } catch (SQLException e) {
-            throw new IOException(e);
         } finally {
             try {
                 if (result != null)
@@ -94,7 +89,7 @@ public class MySQLController implements DatabaseController {
     }
 
     @Override
-    public List<Record> getRecordsByFields(long accountId, Map<String, String> fields) throws IOException {
+    public List<Record> getRecordsByFields(long accountId, Map<String, String> fields) throws SQLException {
         List<Record> records = new LinkedList<>();
         StringBuilder queryBuilder = new StringBuilder();
         queryBuilder.append("select c.contact_id, c.contact_name, c.address, c.add_info, p.number"
@@ -145,8 +140,6 @@ public class MySQLController implements DatabaseController {
             }
             for (Record rec : processed.values())
                 records.add(rec);
-        } catch (SQLException e) {
-            throw new IOException(query, e);
         } finally {
             try {
                 if (result != null)
@@ -168,7 +161,7 @@ public class MySQLController implements DatabaseController {
     }
 
     @Override
-    public void addRecord(long accountId, Record record) throws IOException {
+    public void addRecord(long accountId, Record record) throws SQLException {
         String name = record.getContactName();
         String address = record.getAddress();
         String additional = record.getAdditionalInfo();
@@ -209,8 +202,6 @@ public class MySQLController implements DatabaseController {
                 throw e;
             }
             conn.commit();
-        } catch (SQLException e) {
-            throw new IOException(e);
         } finally {
             try {
                 if (rs != null)
@@ -230,7 +221,7 @@ public class MySQLController implements DatabaseController {
     }
 
     @Override
-    public void editRecord(long recordId, Record edited) throws IOException {
+    public void editRecord(long recordId, Record edited) throws SQLException {
         String name = edited.getContactName();
         String address = edited.getAddress();
         String additional = edited.getAdditionalInfo();
@@ -270,8 +261,6 @@ public class MySQLController implements DatabaseController {
                 throw e;
             }
             conn.commit();
-        } catch (SQLException e) {
-            throw new IOException(e);
         } finally {
             try {
                 if (stmt != null)
@@ -286,7 +275,7 @@ public class MySQLController implements DatabaseController {
     }
 
     @Override
-    public void deleteRecord(long recordId) throws IOException {
+    public void deleteRecord(long recordId) throws SQLException {
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
@@ -305,8 +294,6 @@ public class MySQLController implements DatabaseController {
                 throw e;
             }
             conn.commit();
-        } catch (SQLException e) {
-            throw new IOException(e);
         } finally {
             try {
                 if (stmt != null)
@@ -321,7 +308,7 @@ public class MySQLController implements DatabaseController {
     }
 
     @Override
-    public long getAccountId(String user, String pass) throws IOException {
+    public long getAccountId(String user, String pass) throws SQLException {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -334,8 +321,6 @@ public class MySQLController implements DatabaseController {
             rs = stmt.executeQuery();
             rs.next();
             id = rs.getLong(1);
-        } catch (SQLException e) {
-            throw new IOException(e);
         } finally {
             try {
                 if (stmt != null)
@@ -351,7 +336,7 @@ public class MySQLController implements DatabaseController {
     }
 
     @Override
-    public Record getRecordById(long accountId, long recordId) throws IOException {
+    public Record getRecordById(long accountId, long recordId) throws SQLException {
         Connection conn = null;
         Statement stmt = null;
         ResultSet rs = null;
@@ -360,7 +345,7 @@ public class MySQLController implements DatabaseController {
             stmt = conn.createStatement();
             rs = stmt.executeQuery("select * from contacts where account_id = " + accountId + " and contact_id = " + recordId);
             if (!rs.isBeforeFirst())
-                throw new IOException("No record found");
+                throw new SQLException("No record found");
             rs.next();
             String name = rs.getString("contact_name");
             String address = rs.getString("address");
@@ -378,8 +363,6 @@ public class MySQLController implements DatabaseController {
             if (additional != null)
                 rec.setAdditionalInfo(additional);
             return rec;
-        } catch (SQLException e) {
-            throw new IOException(e);
         } finally {
             try {
                 if (rs != null)
@@ -396,14 +379,6 @@ public class MySQLController implements DatabaseController {
                     conn.close();
             } catch (SQLException e) {}
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        MySQLController c = new MySQLController("jdbc:mysql://localhost:3306/phonebook", "root", "123456");
-        Map<String, String> fields = new HashMap<>();
-        fields.put("contact_name", "John");
-        List<Record> list = c.getRecordsByFields(1, fields);
-        System.out.println(list.size());
     }
 
 }
