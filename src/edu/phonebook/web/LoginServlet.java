@@ -1,5 +1,6 @@
 package edu.phonebook.web;
 import java.io.IOException;
+import java.sql.SQLException;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -54,12 +55,16 @@ public class LoginServlet extends HttpServlet {
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         ServletContext ctx = getServletContext();
         DatabaseController controller = DatabaseService.getControllerFromServletContext(ctx);
-        HttpSession session = initSessionWithAccount(request, controller);
+        try {
+            HttpSession session = initSessionWithAccount(request, controller);
+        } catch (SQLException e) {
+            throw new IOException("There was a problem in accessing the database", e);
+        }
         response.sendRedirect("view");
     }
 
     private HttpSession initSessionWithAccount(HttpServletRequest request, DatabaseController controller)
-            throws IOException {
+            throws IOException, SQLException {
         String user = request.getParameter("user");
         String pass = request.getParameter("pass");
         long accountId = controller.getAccountId(user, pass);

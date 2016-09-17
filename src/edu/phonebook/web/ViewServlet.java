@@ -1,5 +1,6 @@
 package edu.phonebook.web;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -31,11 +32,15 @@ public class ViewServlet extends HttpServlet {
             ServletContext ctx = getServletContext();
             DatabaseController controller = DatabaseService.getControllerFromServletContext(ctx);
             List<Record> records = null;
-            if (request.getParameter("act") == null) {
-                records = controller.getAllRecords(accountId);
-            } else if (request.getParameter("act").equals("find")) {
-                Map<String, String> fields = parseRequestParameters(request);
-                records = controller.getRecordsByFields(accountId, fields);
+            try {
+                if (request.getParameter("act") == null) {
+                    records = controller.getAllRecords(accountId);
+                } else if (request.getParameter("act").equals("find")) {
+                    Map<String, String> fields = parseRequestParameters(request);
+                    records = controller.getRecordsByFields(accountId, fields);
+                }
+            } catch (SQLException e) {
+                throw new IOException("There was a problem in fetching records from the database", e);
             }
             request.setAttribute("records", records);
             RequestDispatcher disp = ctx.getRequestDispatcher("/view.jsp");

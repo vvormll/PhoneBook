@@ -1,5 +1,6 @@
 package edu.phonebook.web;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,7 +35,7 @@ public class ModifyServlet extends HttpServlet {
             Record rec = null;
             try {
                 rec = controller.getRecordById(accountId, contactId);
-            } catch (IOException e) {
+            } catch (SQLException e) {
                 throw new IOException("Record not found or you don't have the rights to modify it", e);
             }
             request.setAttribute("record", rec);
@@ -69,7 +70,11 @@ public class ModifyServlet extends HttpServlet {
         } else {
             ServletContext ctx = getServletContext();
             DatabaseController controller = DatabaseService.getControllerFromServletContext(ctx);
-            executeRequest(request, controller);
+            try {
+                executeRequest(request, controller);
+            } catch (SQLException e) {
+                throw new IOException("There was a problem in accessing the database", e);
+            }
             response.sendRedirect("view");
         }
     }
@@ -78,7 +83,8 @@ public class ModifyServlet extends HttpServlet {
         return session != null && session.getAttribute("accountId") != null;
     }
 
-    private void executeRequest(HttpServletRequest request, DatabaseController controller) throws IOException {
+    private void executeRequest(HttpServletRequest request, DatabaseController controller)
+            throws SQLException, IOException {
         HttpSession session = request.getSession(false);
         long accountId = (long) session.getAttribute("accountId");
         String action = request.getParameter("act");
