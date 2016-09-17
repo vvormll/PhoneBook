@@ -98,13 +98,13 @@ public class MySQLController implements DatabaseController {
         List<Record> records = new LinkedList<>();
         StringBuilder queryBuilder = new StringBuilder();
         queryBuilder.append("select c.contact_id, c.contact_name, c.address, c.add_info, p.number"
-                + " from contacts as c inner join ph_numbers as p on c.contact_id = p.contact_id where accountId = ?");
+                + " from contacts as c inner join ph_numbers as p on c.contact_id = p.contact_id where account_id = ?");
         LinkedList<String> linkedFields = new LinkedList<>();
         if (fields.size() > 0) {
             for (String field : fields.keySet()) {
                 queryBuilder.append(" and ");
                 queryBuilder.append(field);
-                queryBuilder.append(" like \"%?%\"");
+                queryBuilder.append(" like ?");
                 linkedFields.add(field);
             }
         }
@@ -118,7 +118,7 @@ public class MySQLController implements DatabaseController {
             stmt.setLong(1, accountId);
             int counter = 2;
             for (String field : linkedFields) {
-                stmt.setString(counter, fields.get(field));
+                stmt.setString(counter, "%" + fields.get(field) + "%");
                 counter++;
             }
             result = stmt.executeQuery();
@@ -146,7 +146,7 @@ public class MySQLController implements DatabaseController {
             for (Record rec : processed.values())
                 records.add(rec);
         } catch (SQLException e) {
-            throw new IOException(e);
+            throw new IOException(query, e);
         } finally {
             try {
                 if (result != null)
@@ -396,6 +396,14 @@ public class MySQLController implements DatabaseController {
                     conn.close();
             } catch (SQLException e) {}
         }
+    }
+
+    public static void main(String[] args) throws IOException {
+        MySQLController c = new MySQLController("jdbc:mysql://localhost:3306/phonebook", "root", "123456");
+        Map<String, String> fields = new HashMap<>();
+        fields.put("contact_name", "John");
+        List<Record> list = c.getRecordsByFields(1, fields);
+        System.out.println(list.size());
     }
 
 }
