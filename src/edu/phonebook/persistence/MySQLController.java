@@ -71,11 +71,6 @@ public class MySQLController implements DatabaseController {
                 records.add(rec);
         } finally {
             try {
-                if (result != null)
-                    result.close();
-            } catch (SQLException e) {}
-
-            try {
                 if (stmt != null)
                     stmt.close();
             } catch (SQLException e) {}
@@ -142,11 +137,6 @@ public class MySQLController implements DatabaseController {
                 records.add(rec);
         } finally {
             try {
-                if (result != null)
-                    result.close();
-            } catch (SQLException e) {}
-
-            try {
                 if (stmt != null)
                     stmt.close();
             } catch (SQLException e) {}
@@ -203,11 +193,6 @@ public class MySQLController implements DatabaseController {
             }
             conn.commit();
         } finally {
-            try {
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException e) {}
-
             try {
                 if (stmt != null)
                     stmt.close();
@@ -365,11 +350,6 @@ public class MySQLController implements DatabaseController {
             return rec;
         } finally {
             try {
-                if (rs != null)
-                    rs.close();
-            } catch (SQLException e) {}
-
-            try {
                 if (stmt != null)
                     stmt.close();
             } catch (SQLException e) {}
@@ -378,6 +358,37 @@ public class MySQLController implements DatabaseController {
                 if (conn != null)
                     conn.close();
             } catch (SQLException e) {}
+        }
+    }
+
+    @Override
+    public void addAccount(String user, String pass) throws SQLException {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DriverManager.getConnection(dbUrl, dbUser, dbPass);
+            stmt = conn.prepareStatement("select * from accounts where username=?");
+            stmt.setString(1, user);
+            rs = stmt.executeQuery();
+            if (rs.isBeforeFirst())
+                throw new SQLException("Record already exists");
+            stmt.close();
+            stmt = conn.prepareStatement("insert into accounts values (NULL, ?, password(?))");
+            stmt.setString(1, user);
+            stmt.setString(2, pass);
+            stmt.executeUpdate();
+        } finally {
+            try {
+                if (conn != null)
+                    conn.close();
+            } catch (SQLException e) {}
+
+            try {
+                if (stmt != null)
+                    stmt.close();
+            } catch (SQLException e) {
+            }
         }
     }
 

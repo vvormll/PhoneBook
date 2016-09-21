@@ -17,4 +17,6 @@ public interface DatabaseController {
     void deleteRecord(long recordId) throws SQLException;
 
     long getAccountId(String user, String pass) throws SQLException;
+
+    void addAccount(String user, String pass) throws SQLException;
 }
