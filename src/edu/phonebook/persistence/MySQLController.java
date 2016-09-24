@@ -6,9 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +36,7 @@ public class MySQLController implements DatabaseController {
 
     @Override
     public List<Record> getAllRecords(long accountId) throws SQLException {
-        List<Record> records = new LinkedList<>();
+        List<Record> records = new ArrayList<>();
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet result = null;
@@ -85,11 +85,11 @@ public class MySQLController implements DatabaseController {
 
     @Override
     public List<Record> getRecordsByFields(long accountId, Map<String, String> fields) throws SQLException {
-        List<Record> records = new LinkedList<>();
+        List<Record> records = new ArrayList<>();
         StringBuilder queryBuilder = new StringBuilder();
         queryBuilder.append("select c.contact_id, c.contact_name, c.address, c.add_info, p.number"
                 + " from contacts as c inner join ph_numbers as p on c.contact_id = p.contact_id where account_id = ?");
-        LinkedList<String> linkedFields = new LinkedList<>();
+        List<String> linkedFields = new ArrayList<>();
         if (fields.size() > 0) {
             for (String field : fields.keySet()) {
                 queryBuilder.append(" and ");
