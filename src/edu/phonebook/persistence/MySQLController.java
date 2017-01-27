@@ -15,9 +15,9 @@ import java.util.Set;
 
 public class MySQLController implements DatabaseController {
 
-    public final String dbUrl;
-    public final String dbUser;
-    public final String dbPass;
+    private String dbUrl;
+    private String dbUser;
+    private String dbPass;
 
     public MySQLController(String dbUrl, String user, String pass) throws SQLException {
         this.dbUrl = dbUrl;
