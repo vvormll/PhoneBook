@@ -14,6 +14,7 @@ public class DatabaseService {
         } catch (ClassNotFoundException e) {
             throw new IOException(e);
         }
+
         try {
             return new MySQLController(dbUrl, user, pass);
         } catch (SQLException e) {

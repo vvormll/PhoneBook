@@ -20,8 +20,10 @@ public class SignupServlet extends HttpServlet {
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         HttpSession session = request.getSession(false);
-        if (isActiveSession(session))
+        if (isActiveSession(session)) {
             throw new IOException("You already have an account");
+        }
+
         checkAndAttachErrMsg(request);
         RequestDispatcher disp = getServletContext().getRequestDispatcher("/signupform.jsp");
         disp.forward(request, response);
@@ -34,12 +36,13 @@ public class SignupServlet extends HttpServlet {
     private void checkAndAttachErrMsg(HttpServletRequest request) {
         String err = request.getParameter("err");
         if (err != null) {
-            if (err.equals("exists"))
+            if (err.equals("exists")) {
                 request.setAttribute("errmsg", "Account with this username already exists");
-            else if (err.equals("baduser"))
+            } else if (err.equals("baduser")) {
                 request.setAttribute("errmsg", "Incorrect input: username");
-            else if (err.equals("badpass"))
+            } else if (err.equals("badpass")) {
                 request.setAttribute("errmsg", "Incorrect input: password");
+            }
         }
     }
 

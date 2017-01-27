@@ -25,6 +25,7 @@ public class LoginServlet extends HttpServlet {
             response.sendRedirect("index.html");
             return;
         }
+
         if (isSessionActive(session)) {
             response.sendRedirect("view");
         } else {
@@ -43,8 +44,10 @@ public class LoginServlet extends HttpServlet {
     }
 
     private void logoutSession(HttpSession session) {
-        if (session == null)
+        if (session == null) {
             return;
+        }
+
         if (session.getAttribute("accountId") != null) {
             session.removeAttribute("accountId");
         }
@@ -68,6 +71,7 @@ public class LoginServlet extends HttpServlet {
         String user = request.getParameter("user");
         String pass = request.getParameter("pass");
         long accountId = controller.getAccountId(user, pass);
+
         HttpSession session = request.getSession();
         session.setAttribute("accountId", accountId);
         return session;

@@ -42,42 +42,50 @@ public class MySQLController implements DatabaseController {
         ResultSet result = null;
         try {
             conn = DriverManager.getConnection(dbUrl, dbUser, dbPass);
+
             stmt = conn.prepareStatement("select c.contact_id, c.contact_name, c.address, c.add_info, p.number"
                     + " from contacts as c inner join ph_numbers as p on c.contact_id = p.contact_id where account_id = ?");
             stmt.setLong(1, accountId);
+
             result = stmt.executeQuery();
             Map<Long, Record> processed = new HashMap<>();
+
             while (result.next()) {
                 long contactId = result.getLong("contact_id");
                 if (processed.containsKey(contactId)) {
                     Record rec = processed.get(contactId);
                     String number = result.getString("number");
                     rec.addPhoneNumber(number);
-                }
-                else {
+                } else {
                     String name = result.getString("contact_name");
                     String address = result.getString("address");
                     String additional = result.getString("add_info");
                     String number = result.getString("number");
                     Record rec = new Record(contactId, name, number);
-                    if (address != null)
+                    if (address != null) {
                         rec.setAddress(address);
-                    if (additional != null)
+                    }
+                    if (additional != null) {
                         rec.setAdditionalInfo(additional);
+                    }
                     processed.put(contactId, rec);
                 }
             }
-            for (Record rec : processed.values())
+
+            for (Record rec : processed.values()) {
                 records.add(rec);
+            }
         } finally {
             try {
-                if (stmt != null)
+                if (stmt != null) {
                     stmt.close();
+                }
             } catch (SQLException e) {}
 
             try {
-                if (conn != null)
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {}
         }
         return records;
@@ -86,9 +94,11 @@ public class MySQLController implements DatabaseController {
     @Override
     public List<Record> getRecordsByFields(long accountId, Map<String, String> fields) throws SQLException {
         List<Record> records = new ArrayList<>();
+
         StringBuilder queryBuilder = new StringBuilder();
         queryBuilder.append("select c.contact_id, c.contact_name, c.address, c.add_info, p.number"
                 + " from contacts as c inner join ph_numbers as p on c.contact_id = p.contact_id where account_id = ?");
+
         List<String> linkedFields = new ArrayList<>();
         if (fields.size() > 0) {
             for (String field : fields.keySet()) {
@@ -99,6 +109,7 @@ public class MySQLController implements DatabaseController {
             }
         }
         String query = queryBuilder.toString();
+
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet result = null;
@@ -106,12 +117,14 @@ public class MySQLController implements DatabaseController {
             conn = DriverManager.getConnection(dbUrl, dbUser, dbPass);
             stmt = conn.prepareStatement(query);
             stmt.setLong(1, accountId);
+
             int counter = 2;
             for (String field : linkedFields) {
                 stmt.setString(counter, "%" + fields.get(field) + "%");
                 counter++;
             }
             result = stmt.executeQuery();
+
             Map<Long, Record> processed = new HashMap<>();
             while (result.next()) {
                 long contactId = result.getLong("contact_id");
@@ -119,31 +132,36 @@ public class MySQLController implements DatabaseController {
                     Record rec = processed.get(contactId);
                     String number = result.getString("number");
                     rec.addPhoneNumber(number);
-                }
-                else {
+                } else {
                     String name = result.getString("contact_name");
                     String address = result.getString("address");
                     String additional = result.getString("add_info");
                     String number = result.getString("number");
                     Record rec = new Record(contactId, name, number);
-                    if (address != null)
+                    if (address != null) {
                         rec.setAddress(address);
-                    if (additional != null)
+                    }
+                    if (additional != null) {
                         rec.setAdditionalInfo(additional);
+                    }
                     processed.put(contactId, rec);
                 }
             }
-            for (Record rec : processed.values())
+
+            for (Record rec : processed.values()) {
                 records.add(rec);
+            }
         } finally {
             try {
-                if (stmt != null)
+                if (stmt != null) {
                     stmt.close();
+                }
             } catch (SQLException e) {}
 
             try {
-                if (conn != null)
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {}
         }
 
@@ -156,29 +174,38 @@ public class MySQLController implements DatabaseController {
         String address = record.getAddress();
         String additional = record.getAdditionalInfo();
         Set<String> numbers = record.getPhoneNumbers();
+
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             conn = DriverManager.getConnection(dbUrl, dbUser, dbPass);
             conn.setAutoCommit(false);
+
             stmt = conn.prepareStatement("insert into contacts values (NULL, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
             stmt.setString(1, name);
-            if (address != null)
+
+            if (address != null) {
                 stmt.setString(2, address);
-            else
+            } else {
                 stmt.setNull(2, Types.VARCHAR);
-            if (additional != null)
+            }
+
+            if (additional != null) {
                 stmt.setString(3, additional);
-            else
+            } else {
                 stmt.setNull(3, Types.VARCHAR);
+            }
+
             stmt.setLong(4, accountId);
             stmt.setNull(5, Types.INTEGER);
             stmt.executeUpdate();
+
             rs = stmt.getGeneratedKeys();
             rs.next();
             long contactId = rs.getLong(1);
             stmt.close();
+
             stmt = conn.prepareStatement("insert into ph_numbers values (NULL, ?, ?)");
             try {
                 for (String number : numbers) {
@@ -191,16 +218,19 @@ public class MySQLController implements DatabaseController {
                 conn.rollback();
                 throw e;
             }
+
             conn.commit();
         } finally {
             try {
-                if (stmt != null)
+                if (stmt != null) {
                     stmt.close();
+                }
             } catch (SQLException e) {}
 
             try {
-                if (conn != null)
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {}
         }
     }
@@ -211,28 +241,37 @@ public class MySQLController implements DatabaseController {
         String address = edited.getAddress();
         String additional = edited.getAdditionalInfo();
         Set<String> numbers = edited.getPhoneNumbers();
+
         Connection conn = null;
         PreparedStatement stmt = null;
         try {
             conn = DriverManager.getConnection(dbUrl, dbUser, dbPass);
             conn.setAutoCommit(false);
+
             stmt = conn.prepareStatement("update contacts as c set c.contact_name = ?, c.address = ?, c.add_info = ? where c.contact_id = ?");
             stmt.setString(1, name);
-            if (address != null)
+
+            if (address != null) {
                 stmt.setString(2, address);
-            else
+            } else {
                 stmt.setNull(2, Types.VARCHAR);
-            if (additional != null)
+            }
+
+            if (additional != null) {
                 stmt.setString(3, additional);
-            else
+            } else {
                 stmt.setNull(3, Types.VARCHAR);
+            }
+
             stmt.setLong(4, recordId);
             stmt.executeUpdate();
             stmt.close();
+
             stmt = conn.prepareStatement("delete from ph_numbers where contact_id = ?");
             stmt.setLong(1, recordId);
             stmt.executeUpdate();
             stmt.close();
+
             stmt = conn.prepareStatement("insert into ph_numbers values (NULL, ?, ?)");
             try {
                 for (String number : numbers) {
@@ -245,16 +284,19 @@ public class MySQLController implements DatabaseController {
                 conn.rollback();
                 throw e;
             }
+
             conn.commit();
         } finally {
             try {
-                if (stmt != null)
+                if (stmt != null) {
                     stmt.close();
+                }
             } catch (SQLException e) {}
 
             try {
-                if (conn != null)
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {}
         }
     }
@@ -266,10 +308,12 @@ public class MySQLController implements DatabaseController {
         try {
             conn = DriverManager.getConnection(dbUrl, dbUser, dbPass);
             conn.setAutoCommit(false);
+
             stmt = conn.prepareStatement("delete from ph_numbers where contact_id = ?");
             stmt.setLong(1, recordId);
             stmt.executeUpdate();
             stmt.close();
+
             try {
                 stmt = conn.prepareStatement("delete from contacts where contact_id = ?");
                 stmt.setLong(1, recordId);
@@ -278,16 +322,19 @@ public class MySQLController implements DatabaseController {
                 conn.rollback();
                 throw e;
             }
+
             conn.commit();
         } finally {
             try {
-                if (stmt != null)
+                if (stmt != null) {
                     stmt.close();
+                }
             } catch (SQLException e) {}
 
             try {
-                if (conn != null)
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {}
         }
     }
@@ -308,13 +355,15 @@ public class MySQLController implements DatabaseController {
             id = rs.getLong(1);
         } finally {
             try {
-                if (stmt != null)
+                if (stmt != null) {
                     stmt.close();
+                }
             } catch (SQLException e) {}
 
             try {
-                if (conn != null)
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {}
         }
         return id;
@@ -328,35 +377,44 @@ public class MySQLController implements DatabaseController {
         try {
             conn = DriverManager.getConnection(dbUrl, dbUser, dbPass);
             stmt = conn.createStatement();
+
             rs = stmt.executeQuery("select * from contacts where account_id = " + accountId + " and contact_id = " + recordId);
-            if (!rs.isBeforeFirst())
+            if (!rs.isBeforeFirst()) {
                 throw new SQLException("No record found");
+            }
+
             rs.next();
             String name = rs.getString("contact_name");
             String address = rs.getString("address");
             String additional = rs.getString("add_info");
             long contactId = rs.getLong("contact_id");
             rs.close();
+
             rs = stmt.executeQuery("select * from ph_numbers where contact_id = " + recordId);
             Set<String> numbers = new HashSet<>();
             while (rs.next()) {
                 numbers.add(rs.getString("number"));
             }
+
             Record rec = new Record(contactId, name, numbers);
-            if (address != null)
+            if (address != null) {
                 rec.setAddress(address);
-            if (additional != null)
+            }
+            if (additional != null) {
                 rec.setAdditionalInfo(additional);
+            }
             return rec;
         } finally {
             try {
-                if (stmt != null)
+                if (stmt != null) {
                     stmt.close();
+                }
             } catch (SQLException e) {}
 
             try {
-                if (conn != null)
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {}
         }
     }
@@ -370,23 +428,28 @@ public class MySQLController implements DatabaseController {
             conn = DriverManager.getConnection(dbUrl, dbUser, dbPass);
             stmt = conn.prepareStatement("select * from accounts where username=?");
             stmt.setString(1, user);
+
             rs = stmt.executeQuery();
-            if (rs.isBeforeFirst())
+            if (rs.isBeforeFirst()) {
                 throw new SQLException("Record already exists");
+            }
             stmt.close();
+
             stmt = conn.prepareStatement("insert into accounts values (NULL, ?, password(?))");
             stmt.setString(1, user);
             stmt.setString(2, pass);
             stmt.executeUpdate();
         } finally {
             try {
-                if (conn != null)
+                if (conn != null) {
                     conn.close();
+                }
             } catch (SQLException e) {}
 
             try {
-                if (stmt != null)
+                if (stmt != null) {
                     stmt.close();
+                }
             } catch (SQLException e) {
             }
         }

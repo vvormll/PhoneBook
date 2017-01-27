@@ -50,7 +50,7 @@ public class Record {
     }
 
     public void addPhoneNumber(String phoneNumber) {
-        // check with regexp
+        // TODO check with regexp
         phoneNumbers.add(phoneNumber);
     }
 

@@ -31,6 +31,7 @@ public class ViewServlet extends HttpServlet {
             long accountId = (long) session.getAttribute("accountId");
             ServletContext ctx = getServletContext();
             DatabaseController controller = DatabaseService.getControllerFromServletContext(ctx);
+
             List<Record> records = null;
             try {
                 if (request.getParameter("act") == null) {
@@ -42,6 +43,7 @@ public class ViewServlet extends HttpServlet {
             } catch (SQLException e) {
                 throw new IOException("There was a problem in fetching records from the database", e);
             }
+
             request.setAttribute("records", records);
             RequestDispatcher disp = ctx.getRequestDispatcher("/view.jsp");
             disp.forward(request, response);
@@ -56,6 +58,7 @@ public class ViewServlet extends HttpServlet {
             String paramValue = request.getParameter(paramName);
             if (paramValue == null || paramValue.isEmpty())
                 continue;
+
             String dbParamName;
             try {
                 dbParamName = translateParamToDb(paramName);
@@ -69,14 +72,15 @@ public class ViewServlet extends HttpServlet {
     }
 
     private String translateParamToDb(String param) {
-        if (param.equals("name"))
+        if (param.equals("name")) {
             return "contact_name";
-        else if (param.equals("number"))
+        } else if (param.equals("number")) {
             return "number";
-        else if (param.equals("addr"))
+        } else if (param.equals("addr")) {
             return "address";
-        else
+        } else {
             throw new IllegalArgumentException();
+        }
     }
 
     @Override

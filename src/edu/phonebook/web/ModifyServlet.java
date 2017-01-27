@@ -27,8 +27,10 @@ public class ModifyServlet extends HttpServlet {
             response.sendRedirect("login");
             return;
         }
+
         long accountId = (long) session.getAttribute("accountId");
         ServletContext ctx = getServletContext();
+
         if (request.getParameter("contactId") != null) {
             long contactId = Long.parseLong(request.getParameter("contactId"));
             DatabaseController controller = DatabaseService.getControllerFromServletContext(ctx);
@@ -87,6 +89,7 @@ public class ModifyServlet extends HttpServlet {
             throws SQLException, IOException {
         HttpSession session = request.getSession(false);
         long accountId = (long) session.getAttribute("accountId");
+
         String action = request.getParameter("act");
         if (action.equals("add")) {
             Record rec = constructRecordFromRequest(request);
@@ -122,18 +125,21 @@ public class ModifyServlet extends HttpServlet {
         String address = request.getParameter("address");
         String additional = request.getParameter("additional");
         String[] numbers = request.getParameter("numbers").split(" ");
+
         Set<String> numbersSet = new HashSet<>();
         for (String number : numbers) {
             if (!number.isEmpty()) {
                 numbersSet.add(number);
             }
         }
+
         long contactId;
         if (request.getParameter("contactId") != null) {
             contactId = Long.parseLong(request.getParameter("contactId"));
         } else {
             contactId = -1;
         }
+
         Record rec = new Record(contactId, name, numbersSet);
         if (additional.length() > 0) {
             rec.setAdditionalInfo(additional);
